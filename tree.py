@@ -27,7 +27,7 @@ class QuadTree:
 	def fourth_c(self):
 		return self.current_node * 4 + 4
 
-	def current_value():
+	def current_value(self):
 		return self.storage[self.current_node]
 
 	def value(self, id):
@@ -43,5 +43,3 @@ class QuadTree:
 		self.current_node = third_c()
 	def move_fourth(self):
 		self.current_node = fourth_c()
-	
-QuadTree(3)
