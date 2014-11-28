@@ -1,21 +1,73 @@
 import sys
 import pygame
+from pygame import *
 import random
 from elixer import Elixer
+
+click = False
+
+class ElementController:
+	def __init__(self, window):
+		self.window = window
+		self.zoom_rect = pygame.Rect(self.window.get_rect().right-50,50,15,200)
+		self.zoom_scroll_rect = pygame.Rect(self.window.get_rect().right-50,50,15,30)
+		self.zoom_rect_offset = 0
+		self.initial_pos = 50
+		self.event = None
+
+	def render(self):
+		# print("zoom rect offset: ",self.zoom_rect_offset)
+		# print("previous pos: ",self.initial_pos)
+		# print("mouse pos y:  ",pygame.mouse.get_pos()[1])
+		pygame.draw.rect(self.window, (255,255,255), self.zoom_rect)
+		self.render_zoom_rect()
+		pygame.display.flip()		
+
+	def handle_event(self, event):
+		if event.type == pygame.MOUSEBUTTONDOWN:
+			self.initial_pos = pygame.mouse.get_pos()[1]
+
+		if(self.zoom_scroll_rect.collidepoint(pygame.mouse.get_pos())):
+			self.move_zoom_rect()
+			return True	
+		elif(self.zoom_rect.collidepoint(pygame.mouse.get_pos())):
+			return True
+		return False
+
+	def render_zoom_rect(self):
+		pygame.draw.rect(self.window, (40,40,40), self.zoom_scroll_rect)
+		global click
+		# if(click):
+		# 	self.zoom_scroll_rect.top = pygame.mouse.get_pos()[1]
+		# #self.zoom_scroll_rect.top += offset
+		
+
+	def move_zoom_rect(self):
+
+		global click
+		if(click):
+			self.zoom_scroll_rect.top = pygame.mouse.get_pos()[1]-12
+			self.render_zoom_rect()
+			
+		
+
 
 class GUI:
 	def __init__(self,height,width):
 		pygame.init()
 		self.core = Elixer()
 		self.window = pygame.display.set_mode((height,width))
+		self.element_controller = ElementController(self.window)
 		self.render(0,0)
 		self.initial_pos = pygame.mouse.get_pos()
 		self.camera_x_offset = 0
 		self.camera_y_offset = 0
-		self.click = False
+		click = False
 		self.run()
 
 	def render(self,x_offset, y_offset,scale_level=500):
+		self.element_controller.render()
+
 		coordinates = self.core.get_current_coordinates()
 		Xs = []
 		Ys = []
@@ -33,7 +85,7 @@ class GUI:
 		for h in coordinates:
 			for t, array in h.items():
 				for i in range(0,len(array)-1):
-					print("x1,y1 before:  ", array[i][0], array[i][1])
+					#print("x1,y1 before:  ", array[i][0], array[i][1])
 					x1,y1 = self.scale(scale_level, array[i][0], array[i][1], max_x, min_x, max_y, min_y)
 					x2,y2 = self.scale(scale_level, array[i+1][0], array[i+1][1], max_x, min_x, max_y, min_y)
 
@@ -65,32 +117,41 @@ class GUI:
 		return x,y
 
 	def run(self):
+		global click
 		time = pygame.time.get_ticks()
 		time_step = 1
 		clock = pygame.time.Clock()
 		while True:
-			for event in pygame.event.get():
-				if event.type == pygame.QUIT:
-					sys.exit(0)
-				else:
-					if event.type == pygame.MOUSEBUTTONDOWN:
-						self.click = True
-						self.initial_pos = pygame.mouse.get_pos()
-					if event.type == pygame.MOUSEBUTTONUP:
-						self.click = False
+			event = pygame.event.wait()
 
-					if(self.click):
+			if event.type == pygame.QUIT:
+				sys.exit(0)
+			else:
+				if event.type == pygame.MOUSEBUTTONDOWN:
+					click = True
+					self.initial_pos = pygame.mouse.get_pos()
+				if event.type == pygame.MOUSEBUTTONUP:
+					click = False
+
+				if(click):
+
+					if(self.element_controller.handle_event(event)):
+						print("---> Element Controller Event!")
+					else:
+						if not ((pygame.mouse.get_pos()[0] - self.initial_pos[0]) and pygame.mouse.get_pos()[1] - self.initial_pos[1]):
+							continue
 						self.camera_x_offset += pygame.mouse.get_pos()[0] - self.initial_pos[0]
 						self.camera_y_offset += pygame.mouse.get_pos()[1] - self.initial_pos[1]
 						self.initial_pos = pygame.mouse.get_pos()
+						print("new x offset: ",self.camera_x_offset)
+						print("new y offset: ",self.camera_y_offset)
 
-						if(pygame.time.get_ticks() - time > time_step):
-							self.window.fill((0,0,0))
-							self.render(self.camera_x_offset, self.camera_y_offset)
-							clock.tick(10)
-							print("new x offset: ",self.camera_x_offset)
-							print("new y offset: ",self.camera_y_offset)
-							time = pygame.time.get_ticks()
-					
+					if(pygame.time.get_ticks() - time > time_step):
+						self.window.fill((0,0,0))
+						self.render(self.camera_x_offset, self.camera_y_offset)
+						clock.tick(10)
+						
+						time = pygame.time.get_ticks()
 
+click = False					
 gui = GUI(640,480)
