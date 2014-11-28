@@ -8,10 +8,14 @@ class GUI:
 		pygame.init()
 		self.core = Elixer()
 		self.window = pygame.display.set_mode((height,width))
-		self.render()
+		self.render(0,0)
+		self.initial_pos = pygame.mouse.get_pos()
+		self.camera_x_offset = 0
+		self.camera_y_offset = 0
+		self.click = False
 		self.run()
 
-	def render(self):
+	def render(self,x_offset, y_offset,scale_level=500):
 		coordinates = self.core.get_current_coordinates()
 		Xs = []
 		Ys = []
@@ -30,15 +34,15 @@ class GUI:
 			for t, array in h.items():
 				for i in range(0,len(array)-1):
 					print("x1,y1 before:  ", array[i][0], array[i][1])
-					#print("x2,y2 before:  ", array[i+1][0], array[i+1][1])
-					x1,y1 = self.scale(array[i][0], array[i][1], max_x, min_x, max_y, min_y)
-					x2,y2 = self.scale(array[i+1][0], array[i+1][1], max_x, min_x, max_y, min_y)
-					print("x1,y1 after:  ", x1, y1)
-					#print("x2,y2 after:  ", x2, y2)
-					#print("x1,y1:  ",x1,y1)
-					#print("x2,y2:  ",x2,y2)
+					x1,y1 = self.scale(scale_level, array[i][0], array[i][1], max_x, min_x, max_y, min_y)
+					x2,y2 = self.scale(scale_level, array[i+1][0], array[i+1][1], max_x, min_x, max_y, min_y)
+
+					x1 += x_offset
+					x2 += x_offset
+					y1 += y_offset
+					y2 += y_offset
 					self.draw_line(x1, y1, x2, y2)
-		#self.update()
+		
 
 
 	def update(self):
@@ -48,11 +52,11 @@ class GUI:
 		pygame.draw.line(self.window, (255,255,255), (x1,y1), (x2,y2))
 		self.update()
 
-	def scale(self, x, y, max_x, min_x, max_y, min_y):
+	def scale(self, level, x, y, max_x, min_x, max_y, min_y,):
 		x = (x - min_x) / (max_x - min_x)
 		y = (y - min_y) / (max_y - min_y)
-		x *= 500
-		y *= 500
+		x *= level
+		y *= level
 		# x -= (max_x - min_x) / 2
 		# y -= (max_y - min_y) / 2
 		# scale = max(max_x - min_x, max_y - min_y)
@@ -61,14 +65,32 @@ class GUI:
 		return x,y
 
 	def run(self):
+		time = pygame.time.get_ticks()
+		time_step = 1
+		clock = pygame.time.Clock()
 		while True:
 			for event in pygame.event.get():
 				if event.type == pygame.QUIT:
 					sys.exit(0)
 				else:
-					None
-					#self.render()
-					#self.draw_line(random.randint(0,640),random.randint(0,480),random.randint(0,640),random.randint(0,480))
-					#print ("pygame event ---> ",event)		
+					if event.type == pygame.MOUSEBUTTONDOWN:
+						self.click = True
+						self.initial_pos = pygame.mouse.get_pos()
+					if event.type == pygame.MOUSEBUTTONUP:
+						self.click = False
+
+					if(self.click):
+						self.camera_x_offset += pygame.mouse.get_pos()[0] - self.initial_pos[0]
+						self.camera_y_offset += pygame.mouse.get_pos()[1] - self.initial_pos[1]
+						self.initial_pos = pygame.mouse.get_pos()
+
+						if(pygame.time.get_ticks() - time > time_step):
+							self.window.fill((0,0,0))
+							self.render(self.camera_x_offset, self.camera_y_offset)
+							clock.tick(10)
+							print("new x offset: ",self.camera_x_offset)
+							print("new y offset: ",self.camera_y_offset)
+							time = pygame.time.get_ticks()
+					
 
 gui = GUI(640,480)
