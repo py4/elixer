@@ -58,16 +58,16 @@ class GUI:
 		self.core = Elixer()
 		self.window = pygame.display.set_mode((height,width))
 		self.element_controller = ElementController(self.window)
-		self.render(0,0)
-		self.initial_pos = pygame.mouse.get_pos()
 		self.camera_x_offset = 0
 		self.camera_y_offset = 0
+		self.render(0,0)
+		self.initial_pos = pygame.mouse.get_pos()
 		click = False
 		self.run()
 
-	def render(self,x_offset, y_offset,scale_level=500):
+	def render(self,x_offset, y_offset):
 		self.element_controller.render()
-
+		self.core.push_children_with_collision(self.camera_x_offset, self.camera_y_offset, int(self.core.zoom_level))
 		coordinates = self.core.get_current_coordinates()
 		Xs = []
 		Ys = []
@@ -85,36 +85,22 @@ class GUI:
 		for h in coordinates:
 			for t, array in h.items():
 				for i in range(0,len(array)-1):
-					#print("x1,y1 before:  ", array[i][0], array[i][1])
-					x1,y1 = self.scale(scale_level, array[i][0], array[i][1], max_x, min_x, max_y, min_y)
-					x2,y2 = self.scale(scale_level, array[i+1][0], array[i+1][1], max_x, min_x, max_y, min_y)
+					x1,y1 = Elixer.scale(self.core.zoom_level, array[i][0], array[i][1], max_x, min_x, max_y, min_y)
+					x2,y2 = Elixer.scale(self.core.zoom_level, array[i+1][0], array[i+1][1], max_x, min_x, max_y, min_y)
 
 					x1 += x_offset
 					x2 += x_offset
 					y1 += y_offset
 					y2 += y_offset
 					self.draw_line(x1, y1, x2, y2)
+		self.update()
 		
-
-
 	def update(self):
 		pygame.display.flip()
 
 	def draw_line(self, x1,y1,x2,y2):
 		pygame.draw.line(self.window, (255,255,255), (x1,y1), (x2,y2))
-		self.update()
-
-	def scale(self, level, x, y, max_x, min_x, max_y, min_y,):
-		x = (x - min_x) / (max_x - min_x)
-		y = (y - min_y) / (max_y - min_y)
-		x *= level
-		y *= level
-		# x -= (max_x - min_x) / 2
-		# y -= (max_y - min_y) / 2
-		# scale = max(max_x - min_x, max_y - min_y)
-		# x /= scale
-		# y /= scale
-		return x,y
+		#self.update()
 
 	def run(self):
 		global click
