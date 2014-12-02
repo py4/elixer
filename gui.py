@@ -67,7 +67,8 @@ class GUI:
 
 	def render(self,x_offset, y_offset):
 		self.element_controller.render()
-		self.core.push_children_with_collision(self.camera_x_offset, self.camera_y_offset, int(self.core.zoom_level))
+		self.core.push_siblings_with_collision(self.camera_x_offset, self.camera_y_offset, int(self.core.zoom_level))
+		#self.core.push_children_with_collision(self.camera_x_offset, self.camera_y_offset, int(self.core.zoom_level-1))
 		coordinates = self.core.get_current_coordinates()
 		Xs = []
 		Ys = []
@@ -85,6 +86,7 @@ class GUI:
 		for h in coordinates:
 			for t, array in h.items():
 				for i in range(0,len(array)-1):
+					print("I'm scaling with this:  ", self.core.zoom_level)
 					x1,y1 = Elixer.scale(self.core.zoom_level, array[i][0], array[i][1], max_x, min_x, max_y, min_y)
 					x2,y2 = Elixer.scale(self.core.zoom_level, array[i+1][0], array[i+1][1], max_x, min_x, max_y, min_y)
 
@@ -94,7 +96,7 @@ class GUI:
 					y2 += y_offset
 					self.draw_line(x1, y1, x2, y2)
 		self.update()
-		
+
 	def update(self):
 		pygame.display.flip()
 
@@ -122,6 +124,11 @@ class GUI:
 				if(click):
 
 					if(self.element_controller.handle_event(event)):
+						print(float((pygame.mouse.get_pos()[1] - 50)) / 50)
+
+						
+						self.core.zoom_level = float((pygame.mouse.get_pos()[1] - 50) / 50) + 1
+						print("new zoom level:  ", self.core.zoom_level)
 						print("---> Element Controller Event!")
 					else:
 						if not ((pygame.mouse.get_pos()[0] - self.initial_pos[0]) and pygame.mouse.get_pos()[1] - self.initial_pos[1]):

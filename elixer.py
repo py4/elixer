@@ -62,9 +62,11 @@ class Elixer:
 			coordinates += self.data_handler.load_data(value[0], value[1], value[2])
 		return coordinates
 
-	def push_children_with_collision(self, camera_x_offset, camera_y_offset, zoom_level = None):
+	def push_siblings_with_collision(self, camera_x_offset, camera_y_offset, zoom_level = None):
 		if(zoom_level == None):
 			zoom_level = self.zoom_level
+		if(self.active_nodes == [0]):
+			return
 
 		parents = set()
 		for node in self.active_nodes:
@@ -72,12 +74,20 @@ class Elixer:
 		self.active_nodes = []
 		print("parents: ",parents)
 		for parent in parents:
-			self.active_nodes += self.get_children_with_collision(parent, camera_x_offset, camera_y_offset, zoom_level)
+			self.active_nodes += self.get_children_with_collision(parent, camera_x_offset, camera_y_offset, zoom_level+1)
 		print(">>> just pushed these nodes with collision: ", self.active_nodes)
 
-	def get_children_with_collision(self, current_node, camera_x_offset, camera_y_offset, zoom_level = None):
+	def push_children_with_collision(self, camera_x_offset, camera_y_offset, zoom_level = None):
 		if(zoom_level == None):
 			zoom_level = self.zoom_level
+		result = []
+		for node in self.active_nodes:
+			result += self.get_children_with_collision(node, camera_x_offset, camera_y_offset, zoom_level + 1)
+		self.active_nodes = result
+
+	def get_children_with_collision(self, current_node, camera_x_offset, camera_y_offset, scale_level = None):
+		if(scale_level == None):
+			scale_level = self.zoom_level + 1
 
 		nodes = []
 		for node in self.tree.get_children(current_node):
@@ -89,8 +99,13 @@ class Elixer:
 			max_x = self.tree.metadata[node]["bbox"]["max_x"]
 			max_y = self.tree.metadata[node]["bbox"]["max_y"]
 
-			min_x, min_y = self.scale(zoom_level, min_x, min_y, self.max_x, self.min_x, self.max_y, self.min_y)
-			max_x, max_y = self.scale(zoom_level, max_x, max_y, self.max_x, self.min_x, self.max_y, self.min_y)
+			print("min_x before:  ", min_x)
+			print("min_y before:  ", min_y)
+			print("max_x before:  ", max_x)
+			print("max_y before:  ", max_y)
+			print("scale level:  ", scale_level)
+			min_x, min_y = self.scale(scale_level, min_x, min_y, self.max_x, self.min_x, self.max_y, self.min_y)
+			max_x, max_y = self.scale(scale_level, max_x, max_y, self.max_x, self.min_x, self.max_y, self.min_y)
 
 			min_x += camera_x_offset
 			max_x += camera_x_offset
