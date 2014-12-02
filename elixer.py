@@ -45,7 +45,8 @@ class Elixer:
 
 						i += 1
 
-		print(">> filling metadata is done")
+		#print(">> filling metadata is done")
+		#print(self.tree.get_nodes_at_height(3))
 		#print(self.get_children_without_collision(0,1,1,1))
 	@classmethod
 	def scale(self, level, x, y, max_x, min_x, max_y, min_y):
@@ -83,6 +84,7 @@ class Elixer:
 		result = []
 		for node in self.active_nodes:
 			result += self.get_children_with_collision(node, camera_x_offset, camera_y_offset, zoom_level + 1)
+		print("children:   ", result)
 		self.active_nodes = result
 
 	def get_children_with_collision(self, current_node, camera_x_offset, camera_y_offset, scale_level = None):
@@ -91,6 +93,9 @@ class Elixer:
 
 		nodes = []
 		for node in self.tree.get_children(current_node):
+
+			if(node >= self.tree.storage_size):
+				continue
 			if(self.tree.metadata[node] == {}):
 				continue
 			

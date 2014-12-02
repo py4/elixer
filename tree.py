@@ -12,7 +12,6 @@ class QuadTree:
 		self.root_node = 0
 		self.current_node = 0
 		self.load_storage()
-
 	def load_storage(self):
 		
 		for h in range(0, self.max_height + 1):
@@ -69,3 +68,17 @@ class QuadTree:
 		if(node == None):
 			node = self.current_node
 		return [self.first_c(node), self.second_c(node), self.third_c(node), self.fourth_c(node)]
+
+	def get_nodes_at_height(self, height):
+		height = int(height)
+		h = [None] * self.storage_size
+		h[0] = 0
+		queue = [0]
+		while(set(map(lambda x: h[x], queue)) != set([height])):
+			node = queue[0]
+			queue = queue[1:]
+			if(h[node] < height):
+				for c in self.get_children(node):
+					h[c] = h[node] + 1
+					queue.append(c)
+		return queue

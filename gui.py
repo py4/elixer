@@ -70,6 +70,16 @@ class GUI:
 		self.core.push_siblings_with_collision(self.camera_x_offset, self.camera_y_offset, int(self.core.zoom_level))
 		#self.core.push_children_with_collision(self.camera_x_offset, self.camera_y_offset, int(self.core.zoom_level-1))
 		coordinates = self.core.get_current_coordinates()
+		
+		if(len(coordinates) == 0):
+			self.core.active_nodes = self.core.tree.get_nodes_at_height(self.core.zoom_level - 1)
+			print("update1 active_nodes:  ", self.core.active_nodes)
+			self.core.push_siblings_with_collision(self.camera_x_offset, self.camera_y_offset, int(self.core.zoom_level))
+		
+		if(len(coordinates) == 0):
+			return
+		print("active nodes:  ", self.core.active_nodes)
+
 		Xs = []
 		Ys = []
 		for h in coordinates:
@@ -80,9 +90,10 @@ class GUI:
 					Ys.append(array[i][1])
 					Ys.append(array[i+1][1])
 
+
 		max_x,min_x = max(Xs),min(Xs)
 		max_y,min_y = max(Ys),min(Ys)
-		print("I'm scaling with this:  ", self.core.zoom_level)
+		#print("I'm scaling with this:  ", self.core.zoom_level)
 		for h in coordinates:
 			for t, array in h.items():
 				for i in range(0,len(array)-1):
@@ -124,24 +135,27 @@ class GUI:
 				if(click):
 
 					if(self.element_controller.handle_event(event)):
-						
-						print(">>>>>>")
-						print("this: ", self.element_controller.zoom_scroll_rect.top - 50)
+
 						a = float(self.element_controller.zoom_scroll_rect.top - 50) / 45 + 1
-						#a = float(pygame.mouse.get_pos()[1] - 50) / 50 + 1
-						print("fucking a:  ", a)
+
+						if(int(self.core.zoom_level) != int(a)):
+							print(">>>> ZOOM HAPPENED BROS! :)")
+							print(">>>> from ", int(self.core.zoom_level), " to ", int(a))
+							print(">>>> pushing children!")
+							self.core.push_children_with_collision(self.camera_x_offset, self.camera_y_offset, int(a))
+						
 						self.core.zoom_level = a
 
-						print("new zoom level:  ", self.core.zoom_level)
-						print("---> Element Controller Event!")
+						#print("new zoom level:  ", self.core.zoom_level)
+						#print("---> Element Controller Event!")
 					else:
 						if not ((pygame.mouse.get_pos()[0] - self.initial_pos[0]) and pygame.mouse.get_pos()[1] - self.initial_pos[1]):
 							continue
 						self.camera_x_offset += pygame.mouse.get_pos()[0] - self.initial_pos[0]
 						self.camera_y_offset += pygame.mouse.get_pos()[1] - self.initial_pos[1]
 						self.initial_pos = pygame.mouse.get_pos()
-						print("new x offset: ",self.camera_x_offset)
-						print("new y offset: ",self.camera_y_offset)
+#						print("new x offset: ",self.camera_x_offset)
+#						print("new y offset: ",self.camera_y_offset)
 
 					if(pygame.time.get_ticks() - time > time_step):
 						self.window.fill((0,0,0))
