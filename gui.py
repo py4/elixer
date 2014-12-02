@@ -82,11 +82,11 @@ class GUI:
 
 		max_x,min_x = max(Xs),min(Xs)
 		max_y,min_y = max(Ys),min(Ys)
-
+		print("I'm scaling with this:  ", self.core.zoom_level)
 		for h in coordinates:
 			for t, array in h.items():
 				for i in range(0,len(array)-1):
-					print("I'm scaling with this:  ", self.core.zoom_level)
+					
 					x1,y1 = Elixer.scale(self.core.zoom_level, array[i][0], array[i][1], max_x, min_x, max_y, min_y)
 					x2,y2 = Elixer.scale(self.core.zoom_level, array[i+1][0], array[i+1][1], max_x, min_x, max_y, min_y)
 
@@ -124,10 +124,14 @@ class GUI:
 				if(click):
 
 					if(self.element_controller.handle_event(event)):
-						print(float((pygame.mouse.get_pos()[1] - 50)) / 50)
-
 						
-						self.core.zoom_level = float((pygame.mouse.get_pos()[1] - 50) / 50) + 1
+						print(">>>>>>")
+						print("this: ", self.element_controller.zoom_scroll_rect.top - 50)
+						a = float(self.element_controller.zoom_scroll_rect.top - 50) / 45 + 1
+						#a = float(pygame.mouse.get_pos()[1] - 50) / 50 + 1
+						print("fucking a:  ", a)
+						self.core.zoom_level = a
+
 						print("new zoom level:  ", self.core.zoom_level)
 						print("---> Element Controller Event!")
 					else:
