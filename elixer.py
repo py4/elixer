@@ -80,6 +80,17 @@ class Elixer:
 			self.active_nodes += self.get_children_with_collision(parent, camera_x_offset, camera_y_offset, zoom_level+1)
 		print(">>> just pushed these nodes with collision: ", self.active_nodes)
 
+	def push_parents_with_collision(self, camera_x_offset, camera_y_offset, zoom_level = None):
+		if(zoom_level == None):
+			zoom_level = self.zoom_level
+		if(self.active_nodes == [0]):
+			return
+
+		self.active_nodes = []
+		for node in self.active_nodes:
+			if(has_collision(node, camera_x_offset, camera_y_offset, zoom_level + 1)):
+				self.active_nodes.push(node)
+
 	def push_children_with_collision(self, camera_x_offset, camera_y_offset, zoom_level = None):
 		if(zoom_level == None):
 			zoom_level = self.zoom_level
@@ -88,6 +99,30 @@ class Elixer:
 			result += self.get_children_with_collision(node, camera_x_offset, camera_y_offset, zoom_level + 1)
 		print("children:   ", result)
 		self.active_nodes = result
+
+	def has_collision(self, node, camera_x_offset, camera_y_offset, scale_level):
+		min_x = self.tree.metadata[node]["bbox"]["min_x"]
+		min_y = self.tree.metadata[node]["bbox"]["min_y"]
+		max_x = self.tree.metadata[node]["bbox"]["max_x"]
+		max_y = self.tree.metadata[node]["bbox"]["max_y"]
+
+		min_x, min_y = self.scale(scale_level, min_x, min_y, self.max_x, self.min_x, self.max_y, self.min_y)
+		max_x, max_y = self.scale(scale_level, max_x, max_y, self.max_x, self.min_x, self.max_y, self.min_y)
+
+		min_x += camera_x_offset
+		max_x += camera_x_offset
+		min_y += camera_y_offset
+		max_y += camera_y_offset
+
+		if(min_x < 640 and max_x > 0 and min_y < 480 and max_y > 0):
+			print("=========================")
+			print("This node has collision!:  ", node)
+			print("min_x, min_y:  ", min_x, min_y)
+			print("max_x, max_y:  ", max_x, max_y)
+			print("=========================")
+			return True
+		return False
+
 
 	def get_children_with_collision(self, current_node, camera_x_offset, camera_y_offset, scale_level = None):
 		if(scale_level == None):
@@ -101,30 +136,30 @@ class Elixer:
 			if(self.tree.metadata[node] == {}):
 				continue
 			
-			min_x = self.tree.metadata[node]["bbox"]["min_x"]
-			min_y = self.tree.metadata[node]["bbox"]["min_y"]
-			max_x = self.tree.metadata[node]["bbox"]["max_x"]
-			max_y = self.tree.metadata[node]["bbox"]["max_y"]
+			# min_x = self.tree.metadata[node]["bbox"]["min_x"]
+			# min_y = self.tree.metadata[node]["bbox"]["min_y"]
+			# max_x = self.tree.metadata[node]["bbox"]["max_x"]
+			# max_y = self.tree.metadata[node]["bbox"]["max_y"]
 
-			# print("min_x before:  ", min_x)
-			# print("min_y before:  ", min_y)
-			# print("max_x before:  ", max_x)
-			# print("max_y before:  ", max_y)
-			print("scale level:  ", scale_level)
-			min_x, min_y = self.scale(scale_level, min_x, min_y, self.max_x, self.min_x, self.max_y, self.min_y)
-			max_x, max_y = self.scale(scale_level, max_x, max_y, self.max_x, self.min_x, self.max_y, self.min_y)
+			# # print("min_x before:  ", min_x)
+			# # print("min_y before:  ", min_y)
+			# # print("max_x before:  ", max_x)
+			# # print("max_y before:  ", max_y)
+			# print("scale level:  ", scale_level)
+			# min_x, min_y = self.scale(scale_level, min_x, min_y, self.max_x, self.min_x, self.max_y, self.min_y)
+			# max_x, max_y = self.scale(scale_level, max_x, max_y, self.max_x, self.min_x, self.max_y, self.min_y)
 
-			min_x += camera_x_offset
-			max_x += camera_x_offset
+			# min_x += camera_x_offset
+			# max_x += camera_x_offset
 
-			min_y += camera_y_offset
-			max_y += camera_y_offset
+			# min_y += camera_y_offset
+			# max_y += camera_y_offset
 
-			# print("min_x, min_y:  ", min_x, min_y)
-			# print("max_x, max_y:  ",max_x, max_y)
-			push = False
-			if(min_x < 640 and max_x > 0 and min_y < 480 and max_y > 0):
-				push = True
+			# # print("min_x, min_y:  ", min_x, min_y)
+			# # print("max_x, max_y:  ",max_x, max_y)
+			# push = False
+			# if(min_x < 640 and max_x > 0 and min_y < 480 and max_y > 0):
+			# 	push = True
 
 			# if(min_x > 0 and min_x < self.width  and min_y > 0 and min_y < self.height):
 			# 	push = True
@@ -135,13 +170,7 @@ class Elixer:
 			# elif(max_x > 0 and max_x < self.width and max_y > 0 and max_y < self.height):
 			# 	push = True
 
-			if(push):
-				print("=========================")
-				print("This node has collision!:  ", node)
-				print("he is child of: ", current_node)
-				print("min_x, min_y:  ", min_x, min_y)
-				print("max_x, max_y:  ", max_x, max_y)
-				print("=========================")
+			if(self.has_collision(node, camera_x_offset, camera_y_offset, scale_level)):
 				nodes.append(node)
 			print("collision nodes:  ", nodes)
 			

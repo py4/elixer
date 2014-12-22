@@ -105,7 +105,17 @@ class GUI:
 					# min_x = self.core.min_x
 					# max_y = self.core.max_y
 					# min_y = self.core.min_y
-					
+
+					# l = int(self.core.zoom_level)
+					# if not self.core.best_scale_coordinates[l]:
+					# 	self.core.best_scale_coordinates[l] = {}
+					# 	self.core.best_scale_coordinates[l]["min"] = (min_x, min_y)
+					# 	self.core.best_scale_coordinates[l]["max"] = (max_x, max_y)
+
+					# max_x,max_y = self.core.best_scale_coordinates[l]["max"]
+					# min_x,min_y = self.core.best_scale_coordinates[l]["min"]
+
+
 					x1,y1 = Elixer.scale(self.core.zoom_level, array[i][0], array[i][1], max_x, min_x, max_y, min_y)
 					x2,y2 = Elixer.scale(self.core.zoom_level, array[i+1][0], array[i+1][1], max_x, min_x, max_y, min_y)
 
@@ -150,7 +160,10 @@ class GUI:
 							print(">>>> ZOOM HAPPENED BROS! :)")
 							print(">>>> from ", int(self.core.zoom_level), " to ", int(a))
 							print(">>>> pushing children!")
-							self.core.push_children_with_collision(self.camera_x_offset, self.camera_y_offset, int(a))
+							if(int(self.core.zoom_level) > int(a)):
+								self.core.push_parents_with_collision(self.camera_x_offset, self.camera_y_offset, int(a))
+							else:
+								self.core.push_children_with_collision(self.camera_x_offset, self.camera_y_offset, int(a))
 						
 						self.core.zoom_level = a
 
