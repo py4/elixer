@@ -38,6 +38,7 @@ class Graph:
 				# print("===============================")
 
 	def apply_dijkstra(self, source_node, dest_node):
+		print("start!!!!")
 		result = []
 		dist = self.nodes_count * [None]
 		parent = self.nodes_count * [None]
@@ -51,8 +52,8 @@ class Graph:
 			heappush(queue, (dist[v], v))
 		while len(queue) > 0:
 			dist_u,u = heappop(queue)
-			if(u == dest_node):
-				break
+			# if(u == dest_node):
+			# 	break
 			for v,w in self.list[u]:
 				alt = dist[u] + w
 				if(alt < dist[v]):
@@ -61,12 +62,12 @@ class Graph:
 					heappush(queue, (dist[v], v))
 		
 		
-		while(parent[dest_node] != None):
-			result.append(dest_node)
-			dest_node = parent[dest_node]
-		result.append(source_node)
-		return result[::-1]
+		# while(parent[dest_node] != None):
+		# 	result.append(dest_node)
+		# 	dest_node = parent[dest_node]
+		# result.append(source_node)
+		# return result[::-1]
 
 g = Graph()
 g.load_data("path/path.data")
-print(g.apply_dijkstra(3,12))
+g.apply_dijkstra(0,12)

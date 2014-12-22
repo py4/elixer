@@ -101,10 +101,10 @@ class GUI:
 			for t, array in h.items():
 				for i in range(0,len(array)-1):
 					
-					# max_x = self.core.max_x
-					# min_x = self.core.min_x
-					# max_y = self.core.max_y
-					# min_y = self.core.min_y
+					max_x = self.core.max_x
+					min_x = self.core.min_x
+					max_y = self.core.max_y
+					min_y = self.core.min_y
 
 					# l = int(self.core.zoom_level)
 					# if not self.core.best_scale_coordinates[l]:
