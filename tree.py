@@ -22,7 +22,7 @@ class QuadTree:
 	def parent(self, node = None):
 		if(node == None):
 			node = self.current_node
-		return node / 4
+		return (node-1) / 4
 
 	def first_c(self, node = None):
 		if(node == None):

@@ -68,7 +68,7 @@ class GUI:
 	def render(self,x_offset, y_offset):
 		self.element_controller.render()
 		self.core.push_siblings_with_collision(self.camera_x_offset, self.camera_y_offset, int(self.core.zoom_level))
-		#self.core.push_children_with_collision(self.camera_x_offset, self.camera_y_offset, int(self.core.zoom_level-1))
+		
 		coordinates = self.core.get_current_coordinates()
 		
 		if(len(coordinates) == 0):
@@ -93,10 +93,18 @@ class GUI:
 
 		max_x,min_x = max(Xs),min(Xs)
 		max_y,min_y = max(Ys),min(Ys)
-		#print("I'm scaling with this:  ", self.core.zoom_level)
+		
+		print("###########   I'm scaling with this:  ", self.core.zoom_level)
+		print("###########   camera x offset:  ", self.camera_x_offset)
+		print("###########   camera y offset:  ", self.camera_y_offset)
 		for h in coordinates:
 			for t, array in h.items():
 				for i in range(0,len(array)-1):
+					
+					# max_x = self.core.max_x
+					# min_x = self.core.min_x
+					# max_y = self.core.max_y
+					# min_y = self.core.min_y
 					
 					x1,y1 = Elixer.scale(self.core.zoom_level, array[i][0], array[i][1], max_x, min_x, max_y, min_y)
 					x2,y2 = Elixer.scale(self.core.zoom_level, array[i+1][0], array[i+1][1], max_x, min_x, max_y, min_y)
