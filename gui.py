@@ -69,6 +69,7 @@ class GUI:
 		self.camera_y_offset = 0
 		self.render(0,0)
 		self.initial_pos = pygame.mouse.get_pos()
+		self.last_click_pos = None
 		click = False
 		self.run()
 
@@ -200,7 +201,8 @@ class GUI:
 
 		if(len(source) == 0 or len(dest) == 0):
 			print("SON OF A BITCH!")
-			os.exit()
+			return
+			#os.exit()
 
 		done = False
 		for dist1,s in source:
@@ -259,10 +261,6 @@ class GUI:
 			if event.type == pygame.QUIT:
 				sys.exit(0)
 
-
-
-
-
 			else:
 				if event.type == pygame.MOUSEBUTTONDOWN:
 					print "@@@@@@@@@@ FUCKING BUTTON DOWN @@@@@@@@@@@@"
@@ -270,23 +268,29 @@ class GUI:
 					#search = True
 				
 					self.initial_pos = pygame.mouse.get_pos()
+					self.last_click_pos = pygame.mouse.get_pos()
 
 				if event.type == pygame.MOUSEBUTTONUP:
 					print "@@@@@@@@@@@ FUCKING BUTTON UP @@@@@@@@@@@@@@"
 					click = False
 
-					if(self.initial_pos == pygame.mouse.get_pos()):
-						if(search):
+					if(self.last_click_pos == pygame.mouse.get_pos()):
+						if(search and source):
 							print "######### disable search1"
 							search = False
 							self.apply_search(source)
 						else:
+							print("fucking last click pos:  ", self.last_click_pos)
+							print("fucking mouse pos:  ", pygame.mouse.get_pos())
 							print "########## enable search"
 							search = True
 							source = pygame.mouse.get_pos()
 							#self.apply_search(self.initial_pos)
 					else:
-						if(dist(self.initial_pos, pygame.mouse.get_pos()) < 20):
+						if(dist(self.last_click_pos, pygame.mouse.get_pos()) < 10):
+							print("last click pos:  ", self.last_click_pos)
+							print("not fucking position:  ", pygame.mouse.get_pos())
+							print "special case for setting search to True"
 							search = True
 						else:
 							print "######### disable search2"
@@ -317,7 +321,8 @@ class GUI:
 
 						self.camera_x_offset += pygame.mouse.get_pos()[0] - self.initial_pos[0]
 						self.camera_y_offset += pygame.mouse.get_pos()[1] - self.initial_pos[1]
-						
+
+					 	print(">>>> updated fucking initial pos <<<<")						
 						self.initial_pos = pygame.mouse.get_pos()
 
 					if(pygame.time.get_ticks() - time > time_step):
