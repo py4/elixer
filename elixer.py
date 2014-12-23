@@ -17,6 +17,7 @@ class Elixer:
 
 		self.graph = Graph()
 		self.graph.load_data("path/path.data")
+
 		# thread = threading.Thread(target=self.graph.load_data, args=["path/path.data"])
 		# thread.start()
 
@@ -34,15 +35,18 @@ class Elixer:
 	def get_path_with_coordinations(self, source, destination):
 		result = []
 		for node in self.get_path(source, destination):
-			#print "node:  ",node
 			result.append(self.graph.reverse_nodes_dict[node])
 		return result
 
 	def get_path(self, source, destination):
 		if(source.__class__.__name__ == 'tuple'):
-			return self.graph.apply_dijkstra(self.graph.nodes_dict[source], self.graph.nodes_dict[destination])
+			#path, cost = self.graph.apply_dijkstra(self.graph.nodes_dict[source], self.graph.nodes_dict[destination])
+			path = self.graph.apply_a_star(self.graph.nodes_dict[source], self.graph.nodes_dict[destination])
+			return path
 		else:
-			return self.graph.apply_dijkstra(source, destination)
+			#path, cost = self.graph.apply_dijkstra(source, destination)
+			path = self.graph.apply_a_star(source, destination)
+			return path
 
 	def fill_metadata(self):
 		i = 0
@@ -69,17 +73,11 @@ class Elixer:
 							self.max_y = max([self.max_y, data["bbox"][3]])
 
 						i += 1
-
-		#print(">> filling metadata is done")
-		#print(self.tree.get_nodes_at_height(3))
-		#print(self.get_children_without_collision(0,1,1,1))
 	@classmethod
 	def scale(self, level, x, y, max_x, min_x, max_y, min_y):
 		
 		new_x = (((x - min_x) / (max_x - min_x)) * (640 * level))
 		new_y = (((y - min_y) / (max_y - min_y)) * (480 * level))
-		# new_x = x / (5000)*level
-		# new_y = y / (30000)*level
 		return new_x, new_y
 
 	@classmethod
@@ -104,9 +102,7 @@ class Elixer:
 		parents = set()
 		for node in self.active_nodes:
 			parents.add(self.tree.parent(node))
-			print("node ",list(parents)[-1]," is parent of ",node)
 		self.active_nodes = []
-		print("parents: ",parents)
 		for parent in parents:
 			self.active_nodes += self.get_children_with_collision(parent, camera_x_offset, camera_y_offset, zoom_level+1)
 		print(">>> just pushed these nodes with collision: ", self.active_nodes)
@@ -146,11 +142,6 @@ class Elixer:
 		max_y += camera_y_offset
 
 		if(min_x < 640 and max_x > 0 and min_y < 480 and max_y > 0):
-			print("=========================")
-			print("This node has collision!:  ", node)
-			print("min_x, min_y:  ", min_x, min_y)
-			print("max_x, max_y:  ", max_x, max_y)
-			print("=========================")
 			return True
 		return False
 
@@ -167,40 +158,6 @@ class Elixer:
 			if(self.tree.metadata[node] == {}):
 				continue
 			
-			# min_x = self.tree.metadata[node]["bbox"]["min_x"]
-			# min_y = self.tree.metadata[node]["bbox"]["min_y"]
-			# max_x = self.tree.metadata[node]["bbox"]["max_x"]
-			# max_y = self.tree.metadata[node]["bbox"]["max_y"]
-
-			# # print("min_x before:  ", min_x)
-			# # print("min_y before:  ", min_y)
-			# # print("max_x before:  ", max_x)
-			# # print("max_y before:  ", max_y)
-			# print("scale level:  ", scale_level)
-			# min_x, min_y = self.scale(scale_level, min_x, min_y, self.max_x, self.min_x, self.max_y, self.min_y)
-			# max_x, max_y = self.scale(scale_level, max_x, max_y, self.max_x, self.min_x, self.max_y, self.min_y)
-
-			# min_x += camera_x_offset
-			# max_x += camera_x_offset
-
-			# min_y += camera_y_offset
-			# max_y += camera_y_offset
-
-			# # print("min_x, min_y:  ", min_x, min_y)
-			# # print("max_x, max_y:  ",max_x, max_y)
-			# push = False
-			# if(min_x < 640 and max_x > 0 and min_y < 480 and max_y > 0):
-			# 	push = True
-
-			# if(min_x > 0 and min_x < self.width  and min_y > 0 and min_y < self.height):
-			# 	push = True
-			# elif(min_x > 0 and min_x < self.width and max_y > 0 and max_y < self.height):
-			# 	push = True
-			# elif(max_x > 0 and max_x < self.width and min_y > 0 and min_y < self.height):
-			# 	push = True
-			# elif(max_x > 0 and max_x < self.width and max_y > 0 and max_y < self.height):
-			# 	push = True
-
 			if(self.has_collision(node, camera_x_offset, camera_y_offset, scale_level)):
 				nodes.append(node)
 			print("collision nodes:  ", nodes)

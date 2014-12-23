@@ -22,9 +22,6 @@ class ElementController:
 		self.event = None
 
 	def render(self):
-		# print("zoom rect offset: ",self.zoom_rect_offset)
-		# print("previous pos: ",self.initial_pos)
-		# print("mouse pos y:  ",pygame.mouse.get_pos()[1])
 		pygame.draw.rect(self.window, (255,255,255), self.zoom_rect)
 		self.render_zoom_rect()
 		pygame.display.flip()		
@@ -43,21 +40,13 @@ class ElementController:
 	def render_zoom_rect(self):
 		pygame.draw.rect(self.window, (40,40,40), self.zoom_scroll_rect)
 		global click
-		# if(click):
-		# 	self.zoom_scroll_rect.top = pygame.mouse.get_pos()[1]
-		# #self.zoom_scroll_rect.top += offset
 		
-
 	def move_zoom_rect(self):
-
 		global click
 		if(click):
 			self.zoom_scroll_rect.top = pygame.mouse.get_pos()[1]-12
 			self.render_zoom_rect()
 			
-		
-
-
 class GUI:
 	def __init__(self,height,width):
 		pygame.init()
@@ -81,67 +70,31 @@ class GUI:
 		
 		if(len(coordinates) == 0):
 			self.core.active_nodes = self.core.tree.get_nodes_at_height(self.core.zoom_level - 1)
-			print("update1 active_nodes:  ", self.core.active_nodes)
 			self.core.push_siblings_with_collision(self.camera_x_offset, self.camera_y_offset, int(self.core.zoom_level))
 		
 		if(len(coordinates) == 0):
 			return
-		print("active nodes:  ", self.core.active_nodes)
 
-		Xs = []
-		Ys = []
-		for h in coordinates:
-			for t, array in h.items():
-				for i in range(0,len(array)-1):
-					Xs.append(array[i][0])
-					Xs.append(array[i+1][0])
-					Ys.append(array[i][1])
-					Ys.append(array[i+1][1])
-
-
-		max_x,min_x = max(Xs),min(Xs)
-		max_y,min_y = max(Ys),min(Ys)
-		
+		# here was a code for selective scaling [ check out github ]		
 		print("###########   I'm scaling with this:  ", self.core.zoom_level)
 		print("###########   camera x offset:  ", self.camera_x_offset)
 		print("###########   camera y offset:  ", self.camera_y_offset)
+
+		self.draw_coordinates(coordinates)
+
+	def draw_coordinates(self, coordinates):
 		for h in coordinates:
 			for t, array in h.items():
 				for i in range(0,len(array)-1):
 					
-					# max_x = self.core.max_x
-					# min_x = self.core.min_x
-					# max_y = self.core.max_y
-					# min_y = self.core.min_y
-
-					# l = int(self.core.zoom_level)
-					# if not self.core.best_scale_coordinates[l]:
-					# 	self.core.best_scale_coordinates[l] = {}
-					# 	self.core.best_scale_coordinates[l]["min"] = (min_x, min_y)
-					# 	self.core.best_scale_coordinates[l]["max"] = (max_x, max_y)
-
-					# max_x,max_y = self.core.best_scale_coordinates[l]["max"]
-					# min_x,min_y = self.core.best_scale_coordinates[l]["min"]
-
-
 					x1, y1 = self.transform((array[i][0], array[i][1]))
 					x2, y2 = self.transform((array[i+1][0], array[i+1][1]))
-					# x1,y1 = Elixer.scale(self.core.zoom_level, array[i][0], array[i][1], max_x, min_x, max_y, min_y)
-					# x2,y2 = Elixer.scale(self.core.zoom_level, array[i+1][0], array[i+1][1], max_x, min_x, max_y, min_y)
 
-					# x1 += x_offset
-					# x2 += x_offset
-					# y1 += y_offset
-					# y2 += y_offset
 					self.draw_line(x1, y1, x2, y2)
 
-		#print ">>>>> drawing:   "
 		for i in range(0, len(self.search_points)-1):
 			s = self.search_points[i]
 			t = self.search_points[i+1]
-			# s = (self.search_points[i][0] - self.camera_x_offset, self.search_points[i][1] - self.camera_y_offset)
-			# t = (self.search_points[i+1][0] - self.camera_x_offset, self.search_points[i+1][1] - self.camera_y_offset)
-			#print("from ", s , " to ", t)
 			pygame.draw.line(self.window, (255,0,127), self.transform(s), self.transform(t))
 		self.update()
 
@@ -177,78 +130,66 @@ class GUI:
 
 	def get_knn(self, center, th = 10000):
 		center = self.reverse_transform(center)
-		#best_pos = None
-		#min_dist = float("inf")
 		res = []
+		c = 0
 		for pos in list(self.core.graph.nodes_dict.keys()):
+			if(c == 200):
+				break
 			if(dist(center, pos) < th):#min_dist):
-				#min_dist = dist(center, pos)
 				res.append((dist(center, pos),pos))
-				#best_pos = pos
-		#return best_pos
+				c += 1
 		return sorted(res,key=itemgetter(0))
 
 	def apply_search(self, source):
 		print "&&&&&&&&&&&&&&&&&& SEARCHING &&&&&&&&&&&&&&&&"
+
 		source = (source[0] - self.camera_x_offset, source[1] - self.camera_y_offset)
 		dest = pygame.mouse.get_pos()
 		dest = (dest[0] - self.camera_x_offset, dest[1] - self.camera_y_offset)
-
-		print "path from ", source , " to ", dest
 
 		source = self.get_knn(source)
 		dest = self.get_knn(dest)
 
 		if(len(source) == 0 or len(dest) == 0):
-			print("SON OF A BITCH!")
+			print("NO NEIGHBOR FOUND")
 			return
 			#os.exit()
 
 		done = False
-		for dist1,s in source:
-			print(">>>>>>>>>>>>>   find best pair <<<<<<<<<<<")
-			if(done):
-				break
-			for dist2,d in dest:
-				print(">>>>>>>>>>>>>   source:   ", s)
-				print(">>>>>>>>>>>    dest:   ", d)
-				path = self.core.get_path_with_coordinations(s, d)
-				#print("path:  ", path)
-				if(path == []):
-					print(">>>> breaking because it had no fucking out degree vertices")
-					break
-				if(len(path) > 1):
-					done = True
-					print "--------------->   fucking source:  ", self.transform(s)
-					print "--------------->   fucking dest:  ", self.transform(d)
-					print "--------------->   fucking distance:   ", dist2
-					#print "fucking path:   ", path
+		min_l = min(len(source), len(dest))
+		for i in range(0, min_l):
+			path = self.core.get_path_with_coordinations(source[i][1], dest[i][1])
+			if(len(path) != 0):
+				if(len(path) > 1 or path[0] == dest[i][1]):
 					self.search_points = path
 					break
+			print("changing source and dest")
+			i += min_l / 2
 
-		if not done:
-			print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
-			print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
-			print(">>>>>>   CRAP! <<<<<<")
-			print(">>>>>> lenght of fucking source <<<<<:   ", len(source))
-			print(">>>>>> length of fucking destination <<<<<<<<<<:  ", len(dest))
-			print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
-			print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
-		# for i in range(0, len(path)):
-		# 	path[i] = self.transform(path[i])
+		# for dist1,s in source:
+		# 	if(done):
+		# 		break
+		# 	c = 0
+		# 	for dist2 ,d in dest:
+		# 		path = self.core.get_path_with_coordinations(s, d)
+		# 		if(path == []):
+		# 			print(">>>> breaking because it had no out degree vertices")
+		# 			break
+		# 		if(c == 10):
+		# 			print(">>>> breaking because we passed 10 points")
+		# 			break
+		# 		if(len(path) > 1):
+		# 			done = True
+		# 			print "--------------->   source:  ", self.transform(s)
+		# 			print "--------------->   dest:  ", self.transform(d)
+		# 			print "--------------->   distance:   ", dist2
+		# 			self.search_points = path
+		# 			break
+		# 		c += 1
 
-		# for i in range(0, len(search_points)-1):
-		# 	pygame.draw.line(self.window, (255,0,127), path[i], path[i+1])
-
-		#self.search_points = path
 		self.window.fill((0,0,0))
 		self.render(self.camera_x_offset, self.camera_y_offset)
 		self.update()
-		# for i in range(0, len(path)-1):
-		# 	pygame.draw.line(self.window, (255,0,127), path[i], path[i+1])
-		# self.render(self.camera_x_offset, self.camera_y_offset)
-		# self.update()
-		# print("path:   ", path)
 
 	def run(self):
 		global click, search, source
@@ -263,38 +204,26 @@ class GUI:
 
 			else:
 				if event.type == pygame.MOUSEBUTTONDOWN:
-					print "@@@@@@@@@@ FUCKING BUTTON DOWN @@@@@@@@@@@@"
 					click = True
-					#search = True
-				
+					
 					self.initial_pos = pygame.mouse.get_pos()
 					self.last_click_pos = pygame.mouse.get_pos()
 
 				if event.type == pygame.MOUSEBUTTONUP:
-					print "@@@@@@@@@@@ FUCKING BUTTON UP @@@@@@@@@@@@@@"
 					click = False
 
-					if(self.last_click_pos == pygame.mouse.get_pos()):
+					if(self.last_click_pos == pygame.mouse.get_pos() or dist(self.last_click_pos, pygame.mouse.get_pos()) < 10):
 						if(search and source):
-							print "######### disable search1"
+							print "######### [disable search] case1 #######"
 							search = False
 							self.apply_search(source)
 						else:
-							print("fucking last click pos:  ", self.last_click_pos)
-							print("fucking mouse pos:  ", pygame.mouse.get_pos())
-							print "########## enable search"
+							print "########## [enable search] ##########"
 							search = True
 							source = pygame.mouse.get_pos()
-							#self.apply_search(self.initial_pos)
 					else:
-						if(dist(self.last_click_pos, pygame.mouse.get_pos()) < 10):
-							print("last click pos:  ", self.last_click_pos)
-							print("not fucking position:  ", pygame.mouse.get_pos())
-							print "special case for setting search to True"
-							search = True
-						else:
-							print "######### disable search2"
-							search = False
+						print "######### [disable search] second case ############"
+						search = False
 
 
 
@@ -322,7 +251,6 @@ class GUI:
 						self.camera_x_offset += pygame.mouse.get_pos()[0] - self.initial_pos[0]
 						self.camera_y_offset += pygame.mouse.get_pos()[1] - self.initial_pos[1]
 
-					 	print(">>>> updated fucking initial pos <<<<")						
 						self.initial_pos = pygame.mouse.get_pos()
 
 					if(pygame.time.get_ticks() - time > time_step):
