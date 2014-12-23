@@ -2,6 +2,9 @@ from data import DataHandler
 from tree import QuadTree
 import os, json
 import codecs
+from graph import *
+import multiprocessing
+import threading
 
 class Elixer:
 	def __init__(self):
@@ -12,12 +15,33 @@ class Elixer:
 		self.height = 480
 		self.width = 640
 
+		self.graph = Graph()
+
+		thread = threading.Thread(target=self.graph.load_data, args=["path/path.data"])
+		thread.start()
+
+    #threads.append(thread)
+		# process = multiprocessing.Process(target = self.graph.load_data, args=["path/path.data"])
+		# process.start()
+
 		self.data_handler = DataHandler("data")
 		self.tree = QuadTree(3)
 		self.active_nodes = []
 		self.zoom_level = 1
 		self.fill_metadata()
 		self.active_nodes.append(0)
+
+	def get_path_with_coordinations(self, source, destination):
+		result = []
+		for node in self.get_path(source, destination):
+			result.append(self.graph.reverse_nodes_dict[node])
+		return result
+
+	def get_path(self, source, destination):
+		if(source.__class__.__name__ == 'tuple'):
+			return self.graph.apply_dijkstra(self.graph.nodes_dict[source], self.graph.nodes_dict[destination])
+		else:
+			return self.graph.apply_dijkstra(source, destination)
 
 	def fill_metadata(self):
 		i = 0
@@ -56,6 +80,12 @@ class Elixer:
 		# new_x = x / (5000)*level
 		# new_y = y / (30000)*level
 		return new_x, new_y
+
+	@classmethod
+	def reverse_scale(self, level, new_x, new_y, max_x, min_x, max_y, min_y):
+		old_x = (float(new_x) / (640 * level)) * (max_x - min_x) + min_x
+		old_y = (float(new_y) / (480 * level)) * (max_y - min_y) + min_y
+		return old_x, old_y
 		
 	def get_current_coordinates(self):
 		coordinates = []

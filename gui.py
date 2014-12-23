@@ -5,6 +5,11 @@ import random
 from elixer import Elixer
 
 click = False
+search = False
+source = None
+
+def dist(pos1, pos2):
+	return ((pos1[0] - pos2[0]) ** 2 + (pos1[1] - pos2[1]) ** 2) ** 0.5
 
 class ElementController:
 	def __init__(self, window):
@@ -56,6 +61,7 @@ class GUI:
 	def __init__(self,height,width):
 		pygame.init()
 		self.core = Elixer()
+		self.search_points = []
 		self.window = pygame.display.set_mode((height,width))
 		self.element_controller = ElementController(self.window)
 		self.camera_x_offset = 0
@@ -101,10 +107,10 @@ class GUI:
 			for t, array in h.items():
 				for i in range(0,len(array)-1):
 					
-					max_x = self.core.max_x
-					min_x = self.core.min_x
-					max_y = self.core.max_y
-					min_y = self.core.min_y
+					# max_x = self.core.max_x
+					# min_x = self.core.min_x
+					# max_y = self.core.max_y
+					# min_y = self.core.min_y
 
 					# l = int(self.core.zoom_level)
 					# if not self.core.best_scale_coordinates[l]:
@@ -116,15 +122,29 @@ class GUI:
 					# min_x,min_y = self.core.best_scale_coordinates[l]["min"]
 
 
-					x1,y1 = Elixer.scale(self.core.zoom_level, array[i][0], array[i][1], max_x, min_x, max_y, min_y)
-					x2,y2 = Elixer.scale(self.core.zoom_level, array[i+1][0], array[i+1][1], max_x, min_x, max_y, min_y)
+					x1, y1 = self.transform((array[i][0], array[i][1]))
+					x2, y2 = self.transform((array[i+1][0], array[i+1][1]))
+					# x1,y1 = Elixer.scale(self.core.zoom_level, array[i][0], array[i][1], max_x, min_x, max_y, min_y)
+					# x2,y2 = Elixer.scale(self.core.zoom_level, array[i+1][0], array[i+1][1], max_x, min_x, max_y, min_y)
 
-					x1 += x_offset
-					x2 += x_offset
-					y1 += y_offset
-					y2 += y_offset
+					# x1 += x_offset
+					# x2 += x_offset
+					# y1 += y_offset
+					# y2 += y_offset
 					self.draw_line(x1, y1, x2, y2)
 		self.update()
+
+	def transform(self, (x,y)):
+		new_x,new_y = Elixer.scale(self.core.zoom_level, x, y, self.core.max_x, self.core.min_x, self.core.max_y, self.core.min_y)
+		new_x += self.camera_x_offset
+		new_y += self.camera_y_offset
+		return new_x, new_y
+
+	def reverse_transform(self, (x,y)):
+		old_x, old_y = Elixer.reverse_scale(self.core.zoom_level, x, y, self.core.max_x, self.core.min_x, self.core.max_y, self.core.min_y)
+		old_x -= self.camera_x_offset
+		old_y -= self.camera_y_offset
+		return old_x, old_y
 
 	def update(self):
 		pygame.display.flip()
@@ -133,8 +153,37 @@ class GUI:
 		pygame.draw.line(self.window, (255,255,255), (x1,y1), (x2,y2))
 		#self.update()
 
+
+	def get_nearest_to(self, center):
+		print("FIRST:   ", center)
+		center = self.reverse_transform(center)
+		print("SECOND:  ", center)
+		best_pos = None
+		min_dist = float("inf")
+		for pos in list(self.core.graph.nodes_dict.keys()):
+			if(dist(center, pos) < min_dist):
+				min_dist = dist(center, pos)
+				best_pos = pos
+		return best_pos
+
+	def apply_search(self, source):
+		dest = pygame.mouse.get_pos()
+		source = self.get_nearest_to(source)
+		dest = self.get_nearest_to(dest)
+		print("source:  ", source)
+		print("dest:  ", dest)
+		path = self.core.get_path_with_coordinations(source, dest)
+		for i in range(0, len(path)):
+			path[i] = self.transform(path[i])
+			
+		self.search_points = path
+		for i in range(0, len(path)-1):
+			pygame.draw.line(self.window, (120,120,120), path[i], path[i+1])
+		self.update()
+		print("path:   ", path)
+
 	def run(self):
-		global click
+		global click, search, source
 		time = pygame.time.get_ticks()
 		time_step = 1
 		clock = pygame.time.Clock()
@@ -143,12 +192,34 @@ class GUI:
 
 			if event.type == pygame.QUIT:
 				sys.exit(0)
+
+
+
+
+
 			else:
 				if event.type == pygame.MOUSEBUTTONDOWN:
 					click = True
+					#search = True
+				
 					self.initial_pos = pygame.mouse.get_pos()
+
 				if event.type == pygame.MOUSEBUTTONUP:
 					click = False
+
+					if(self.initial_pos == pygame.mouse.get_pos()):
+						if(search):
+							search = False
+							self.apply_search(source)
+							print("$$$$$$$$$  fucking search!!! $$$$$$$$$$$$$$$$$$")
+						else:
+							search = True
+							source = pygame.mouse.get_pos()
+							#self.apply_search(self.initial_pos)
+					else:
+						search = False
+
+
 
 				if(click):
 
@@ -167,16 +238,14 @@ class GUI:
 						
 						self.core.zoom_level = a
 
-						#print("new zoom level:  ", self.core.zoom_level)
-						#print("---> Element Controller Event!")
 					else:
 						if not ((pygame.mouse.get_pos()[0] - self.initial_pos[0]) and pygame.mouse.get_pos()[1] - self.initial_pos[1]):
 							continue
+
 						self.camera_x_offset += pygame.mouse.get_pos()[0] - self.initial_pos[0]
 						self.camera_y_offset += pygame.mouse.get_pos()[1] - self.initial_pos[1]
+						
 						self.initial_pos = pygame.mouse.get_pos()
-#						print("new x offset: ",self.camera_x_offset)
-#						print("new y offset: ",self.camera_y_offset)
 
 					if(pygame.time.get_ticks() - time > time_step):
 						self.window.fill((0,0,0))
