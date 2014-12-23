@@ -16,9 +16,9 @@ class Elixer:
 		self.width = 640
 
 		self.graph = Graph()
-
-		thread = threading.Thread(target=self.graph.load_data, args=["path/path.data"])
-		thread.start()
+		self.graph.load_data("path/path.data")
+		# thread = threading.Thread(target=self.graph.load_data, args=["path/path.data"])
+		# thread.start()
 
     #threads.append(thread)
 		# process = multiprocessing.Process(target = self.graph.load_data, args=["path/path.data"])
@@ -34,6 +34,7 @@ class Elixer:
 	def get_path_with_coordinations(self, source, destination):
 		result = []
 		for node in self.get_path(source, destination):
+			#print "node:  ",node
 			result.append(self.graph.reverse_nodes_dict[node])
 		return result
 

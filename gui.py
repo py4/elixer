@@ -132,6 +132,15 @@ class GUI:
 					# y1 += y_offset
 					# y2 += y_offset
 					self.draw_line(x1, y1, x2, y2)
+
+		#print ">>>>> drawing:   "
+		for i in range(0, len(self.search_points)-1):
+			s = self.search_points[i]
+			t = self.search_points[i+1]
+			# s = (self.search_points[i][0] - self.camera_x_offset, self.search_points[i][1] - self.camera_y_offset)
+			# t = (self.search_points[i+1][0] - self.camera_x_offset, self.search_points[i+1][1] - self.camera_y_offset)
+			#print("from ", s , " to ", t)
+			pygame.draw.line(self.window, (255,0,127), self.transform(s), self.transform(t))
 		self.update()
 
 	def transform(self, (x,y)):
@@ -155,9 +164,7 @@ class GUI:
 
 
 	def get_nearest_to(self, center):
-		print("FIRST:   ", center)
 		center = self.reverse_transform(center)
-		print("SECOND:  ", center)
 		best_pos = None
 		min_dist = float("inf")
 		for pos in list(self.core.graph.nodes_dict.keys()):
@@ -167,25 +174,34 @@ class GUI:
 		return best_pos
 
 	def apply_search(self, source):
-		print("source:  ", source)
-		print("source[0]:  ", source[0])
 		source = (source[0] - self.camera_x_offset, source[1] - self.camera_y_offset)
 		dest = pygame.mouse.get_pos()
 		dest = (dest[0] - self.camera_x_offset, dest[1] - self.camera_y_offset)
 
+		print "path from ", source , " to ", dest
+
 		source = self.get_nearest_to(source)
 		dest = self.get_nearest_to(dest)
-		print("source:  ", source)
-		print("dest:  ", dest)
-		path = self.core.get_path_with_coordinations(source, dest)
-		for i in range(0, len(path)):
-			path[i] = self.transform(path[i])
 
+		print "fucking source:  ", source
+		print "fucking dest:  ", dest
+		path = self.core.get_path_with_coordinations(source, dest)
 		self.search_points = path
-		for i in range(0, len(path)-1):
-			pygame.draw.line(self.window, (255,0,127), path[i], path[i+1])
+		# for i in range(0, len(path)):
+		# 	path[i] = self.transform(path[i])
+
+		# for i in range(0, len(search_points)-1):
+		# 	pygame.draw.line(self.window, (255,0,127), path[i], path[i+1])
+
+		#self.search_points = path
+		self.window.fill((0,0,0))
+		self.render(self.camera_x_offset, self.camera_y_offset)
 		self.update()
-		print("path:   ", path)
+		# for i in range(0, len(path)-1):
+		# 	pygame.draw.line(self.window, (255,0,127), path[i], path[i+1])
+		# self.render(self.camera_x_offset, self.camera_y_offset)
+		# self.update()
+		# print("path:   ", path)
 
 	def run(self):
 		global click, search, source
@@ -204,24 +220,28 @@ class GUI:
 
 			else:
 				if event.type == pygame.MOUSEBUTTONDOWN:
+					print "@@@@@@@@@@ FUCKING BUTTON DOWN @@@@@@@@@@@@"
 					click = True
 					#search = True
 				
 					self.initial_pos = pygame.mouse.get_pos()
 
 				if event.type == pygame.MOUSEBUTTONUP:
+					print "@@@@@@@@@@@ FUCKING BUTTON UP @@@@@@@@@@@@@@"
 					click = False
 
-					if(self.initial_pos == pygame.mouse.get_pos()):
+					if(self.initial_pos == pygame.mouse.get_pos() or dist(self.initial_pos, pygame.mouse.get_pos()) < 5):
 						if(search):
+							print "######### disable search1"
 							search = False
 							self.apply_search(source)
-							print("$$$$$$$$$  fucking search!!! $$$$$$$$$$$$$$$$$$")
 						else:
+							print "########## enable search"
 							search = True
 							source = pygame.mouse.get_pos()
 							#self.apply_search(self.initial_pos)
 					else:
+						print "######### disable search2"
 						search = False
 
 

@@ -38,7 +38,8 @@ class Graph:
 				# print("===============================")
 
 	def apply_dijkstra(self, source_node, dest_node):
-		print("start!!!!")
+		print("source_node:  ", source_node)
+		print("dest_node:  ", dest_node)
 		result = []
 		dist = self.nodes_count * [None]
 		parent = self.nodes_count * [None]
@@ -62,10 +63,13 @@ class Graph:
 					heappush(queue, (dist[v], v))
 		
 		
+#		result.append(dest_node)
 		while(parent[dest_node] != None):
 			result.append(dest_node)
 			dest_node = parent[dest_node]
 		result.append(source_node)
+
+		print ("fucking result:  ", result[::-1])
 		return result[::-1]
 
 # g = Graph()
