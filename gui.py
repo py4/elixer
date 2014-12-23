@@ -167,7 +167,12 @@ class GUI:
 		return best_pos
 
 	def apply_search(self, source):
+		print("source:  ", source)
+		print("source[0]:  ", source[0])
+		source = (source[0] - self.camera_x_offset, source[1] - self.camera_y_offset)
 		dest = pygame.mouse.get_pos()
+		dest = (dest[0] - self.camera_x_offset, dest[1] - self.camera_y_offset)
+
 		source = self.get_nearest_to(source)
 		dest = self.get_nearest_to(dest)
 		print("source:  ", source)
@@ -175,10 +180,10 @@ class GUI:
 		path = self.core.get_path_with_coordinations(source, dest)
 		for i in range(0, len(path)):
 			path[i] = self.transform(path[i])
-			
+
 		self.search_points = path
 		for i in range(0, len(path)-1):
-			pygame.draw.line(self.window, (120,120,120), path[i], path[i+1])
+			pygame.draw.line(self.window, (255,0,127), path[i], path[i+1])
 		self.update()
 		print("path:   ", path)
 
