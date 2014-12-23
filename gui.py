@@ -3,6 +3,7 @@ import pygame
 from pygame import *
 import random
 from elixer import Elixer
+from operator import itemgetter
 
 click = False
 search = False
@@ -173,20 +174,64 @@ class GUI:
 				best_pos = pos
 		return best_pos
 
+	def get_knn(self, center, th = 10000):
+		center = self.reverse_transform(center)
+		#best_pos = None
+		#min_dist = float("inf")
+		res = []
+		for pos in list(self.core.graph.nodes_dict.keys()):
+			if(dist(center, pos) < th):#min_dist):
+				#min_dist = dist(center, pos)
+				res.append((dist(center, pos),pos))
+				#best_pos = pos
+		#return best_pos
+		return sorted(res,key=itemgetter(0))
+
 	def apply_search(self, source):
+		print "&&&&&&&&&&&&&&&&&& SEARCHING &&&&&&&&&&&&&&&&"
 		source = (source[0] - self.camera_x_offset, source[1] - self.camera_y_offset)
 		dest = pygame.mouse.get_pos()
 		dest = (dest[0] - self.camera_x_offset, dest[1] - self.camera_y_offset)
 
 		print "path from ", source , " to ", dest
 
-		source = self.get_nearest_to(source)
-		dest = self.get_nearest_to(dest)
+		source = self.get_knn(source)
+		dest = self.get_knn(dest)
 
-		print "fucking source:  ", source
-		print "fucking dest:  ", dest
-		path = self.core.get_path_with_coordinations(source, dest)
-		self.search_points = path
+		if(len(source) == 0 or len(dest) == 0):
+			print("SON OF A BITCH!")
+			os.exit()
+
+		done = False
+		for dist1,s in source:
+			print(">>>>>>>>>>>>>   find best pair <<<<<<<<<<<")
+			if(done):
+				break
+			for dist2,d in dest:
+				print(">>>>>>>>>>>>>   source:   ", s)
+				print(">>>>>>>>>>>    dest:   ", d)
+				path = self.core.get_path_with_coordinations(s, d)
+				#print("path:  ", path)
+				if(path == []):
+					print(">>>> breaking because it had no fucking out degree vertices")
+					break
+				if(len(path) > 1):
+					done = True
+					print "--------------->   fucking source:  ", self.transform(s)
+					print "--------------->   fucking dest:  ", self.transform(d)
+					print "--------------->   fucking distance:   ", dist2
+					#print "fucking path:   ", path
+					self.search_points = path
+					break
+
+		if not done:
+			print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
+			print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
+			print(">>>>>>   CRAP! <<<<<<")
+			print(">>>>>> lenght of fucking source <<<<<:   ", len(source))
+			print(">>>>>> length of fucking destination <<<<<<<<<<:  ", len(dest))
+			print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
+			print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
 		# for i in range(0, len(path)):
 		# 	path[i] = self.transform(path[i])
 
@@ -230,7 +275,7 @@ class GUI:
 					print "@@@@@@@@@@@ FUCKING BUTTON UP @@@@@@@@@@@@@@"
 					click = False
 
-					if(self.initial_pos == pygame.mouse.get_pos() or dist(self.initial_pos, pygame.mouse.get_pos()) < 5):
+					if(self.initial_pos == pygame.mouse.get_pos()):
 						if(search):
 							print "######### disable search1"
 							search = False
@@ -241,8 +286,11 @@ class GUI:
 							source = pygame.mouse.get_pos()
 							#self.apply_search(self.initial_pos)
 					else:
-						print "######### disable search2"
-						search = False
+						if(dist(self.initial_pos, pygame.mouse.get_pos()) < 20):
+							search = True
+						else:
+							print "######### disable search2"
+							search = False
 
 
 
